@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infrastructure as Code Cloud Environment</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f7fb;
+      color: #1e293b;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a, #2563eb);
+      color: white;
+      padding: 22px 7%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #dbeafe;
+      font-size: 14px;
+    }
+
+    .environment-badge {
+      background: #dcfce7;
+      color: #166534;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .value {
+      color: #1d4ed8;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .small-text {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .section-title {
+      margin: 28px 0 15px;
+      font-size: 21px;
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 18px;
+    }
+
+    .resource-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      border-left: 6px solid #2563eb;
+    }
+
+    .resource-card.network { border-color: #7c3aed; }
+    .resource-card.compute { border-color: #ea580c; }
+    .resource-card.database { border-color: #16a34a; }
+    .resource-card.storage { border-color: #0891b2; }
+    .resource-card.security { border-color: #dc2626; }
+    .resource-card.monitoring { border-color: #ca8a04; }
+
+    .resource-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .resource-card p {
+      color: #475569;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .status-online {
+      color: #16a34a;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      color: #ca8a04;
+      font-weight: bold;
+    }
+
+    .terraform-panel {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 22px;
+      border-radius: 12px;
+      margin-top: 25px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+    }
+
+    .terraform-panel h2 {
+      margin-top: 0;
+      color: #93c5fd;
+      font-size: 20px;
+    }
+
+    .terminal {
+      background: #020617;
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 145px;
+      font-family: monospace;
+      color: #86efac;
+      white-space: pre-line;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .controls {
+      background: white;
+      margin-top: 25px;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    button {
+      padding: 12px 16px;
+      margin: 5px 8px 5px 0;
+      border: none;
+      border-radius: 7px;
+      background: #2563eb;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .plan-btn {
+      background: #7c3aed;
+    }
+
+    .plan-btn:hover {
+      background: #6d28d9;
+    }
+
+    .destroy-btn {
+      background: #dc2626;
+    }
+
+    .destroy-btn:hover {
+      background: #b91c1c;
+    }
+
+    .notification {
+      display: none;
+      margin-top: 15px;
+      padding: 13px;
+      border-radius: 7px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    th, td {
+      padding: 14px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #eff6ff;
+      color: #1e3a8a;
+    }
+
+    footer {
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      padding: 25px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Infrastructure as Code Cloud Environment</h1>
+      <p>Automated cloud infrastructure provisioning using Terraform</p>
+    </div>
+    <div class="environment-badge" id="environmentBadge">● Production Environment</div>
+  </header>
+
+  <main>
+
+    <section class="summary-grid">
+      <div class="card">
+        <h3>Cloud Provider</h3>
+        <div class="value" style="font-size:22px;">AWS</div>
+        <div class="small-text">Region: ap-south-1, Mumbai</div>
+      </div>
+
+      <div class="card">
+        <h3>Infrastructure Resources</h3>
+        <div class="value" id="resourceCount">12</div>
+        <div class="small-text">Managed through Terraform</div>
+      </div>
+
+      <div class="card">
+        <h3>Deployment Status</h3>
+        <div class="value" style="font-size:22px; color:#16a34a;" id="deploymentStatus">Active</div>
+        <div class="small-text">Last applied: Today, 10:45 AM</div>
+      </div>
+
+      <div class="card">
+        <h3>Estimated Monthly Cost</h3>
+        <div class="value">₹2,450</div>
+        <div class="small-text">Development environment estimate</div>
+      </div>
+    </section>
+
+    <h2 class="section-title">Provisioned Cloud Resources</h2>
+
+    <section class="resource-grid">
+      <div class="resource-card network">
+        <h3>🌐 VPC Network</h3>
+        <p><strong>VPC CIDR:</strong> 10.0.0.0/16</p>
+        <p><strong>Subnets:</strong> 2 Public + 2 Private</p>
+        <p>Status: <span class="status-online">● Active</span></p>
+      </div>
+
+      <div class="resource-card compute">
+        <h3>🖥 EC2 Compute</h3>
+        <p><strong>Instances:</strong> 2 t2.micro servers</p>
+        <p><strong>Auto Scaling:</strong> Enabled</p>
+        <p>Status: <span class="status-online">● Running</span></p>
+      </div>
+
+      <div class="resource-card database">
+        <h3>🗄 RDS Database</h3>
+        <p><strong>Engine:</strong> MySQL</p>
+        <p><strong>Backup:</strong> Daily automated backup</p>
+        <p>Status: <span class="status-online">● Available</span></p>
+      </div>
+
+      <div class="resource-card storage">
+        <h3>📦 S3 Storage</h3>
+        <p><strong>Bucket:</strong> iac-project-backups</p>
+        <p><strong>Encryption:</strong> AES-256 enabled</p>
+        <p>Status: <span class="status-online">● Secure</span></p>
+      </div>
+
+      <div class="resource-card security">
+        <h3>🔐 IAM Security</h3>
+        <p><strong>Roles:</strong> Admin, Developer, ReadOnly</p>
+        <p><strong>Policies:</strong> Least-privilege access</p>
+        <p>Status: <span class="status-online">● Protected</span></p>
+      </div>
+
+      <div class="resource-card monitoring">
+        <h3>📊 Cloud Monitoring</h3>
+        <p><strong>Service:</strong> Amazon CloudWatch</p>
+        <p><strong>Alerts:</strong> CPU, Memory, Uptime</p>
+        <p>Status: <span class="status-online">● Monitoring</span></p>
+      </div>
+    </section>
+
+    <section class="terraform-panel">
+      <h2>Terraform Deployment Console</h2>
+      <div class="terminal" id="terminalOutput">terraform init
+Initializing backend...
+Initializing provider plugins...
+Terraform has been successfully initialized.
+
+terraform apply
+Apply complete! Resources: 12 added, 0 changed, 0 destroyed.</div>
+    </section>
+
+    <section class="controls">
+      <h2>Infrastructure Controls</h2>
+      <button class="plan-btn" onclick="terraformPlan()">Terraform Plan</button>
+      <button onclick="terraformApply()">Apply Infrastructure</button>
+      <button onclick="addResource()">Add EC2 Instance</button>
+      <button class="destroy-btn" onclick="terraformDestroy()">Destroy Environment</button>
+      <div class="notification" id="notification"></div>
+    </section>
+
+    <h2 class="section-title">Terraform Resource Inventory</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Terraform Resource</th>
+          <th>Cloud Service</th>
+          <th>Purpose</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="resourceTable">
+        <tr>
+          <td>aws_vpc.main</td>
+          <td>Amazon VPC</td>
+          <td>Private cloud network</td>
+          <td class="status-online">Created</td>
+        </tr>
+        <tr>
+          <td>aws_instance.web_server</td>
+          <td>Amazon EC2</td>
+          <td>Application hosting</td>
+          <td class="status-online">Running</td>
+        </tr>
+        <tr>
+          <td>aws_db_instance.database</td>
+          <td>Amazon RDS</td>
+          <td>Managed database</td>
+          <td class="status-online">Available</td>
+        </tr>
+        <tr>
+          <td>aws_s3_bucket.backups</td>
+          <td>Amazon S3</td>
+          <td>Encrypted backup storage</td>
+          <td class="status-online">Active</td>
+        </tr>
+        <tr>
+          <td>aws_iam_role.project_role</td>
+          <td>AWS IAM</td>
+          <td>Access management</td>
+          <td class="status-online">Configured</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </main>
+
+  <footer>
+    © 2026 Infrastructure as Code Cloud Environment | Terraform + AWS College Project Prototype
+  </footer>
+
+  <script>
+    function showNotification(message, type = "success") {
+      const notification = document.getElementById("notification");
+      notification.style.display = "block";
+      notification.textContent = message;
+
+      if (type === "error") {
+        notification.style.background = "#fee2e2";
+        notification.style.color = "#991b1b";
+      } else {
+        notification.style.background = "#dcfce7";
+        notification.style.color = "#166534";
+      }
+
+      setTimeout(() => {
+        notification.style.display = "none";
+      }, 5000);
+    }
+
+    function terraformPlan() {
+      document.getElementById("terminalOutput").textContent =
+`terraform plan
+Refreshing Terraform state...
+
+Terraform will perform the following actions:
+
+  + aws_instance.web_server_3
+  + aws_cloudwatch_metric_alarm.cpu_alert
+
+Plan: 2 to add, 0 to change, 0 to destroy.`;
+
+      showNotification("Terraform plan generated successfully. Two new resources are ready for review.");
+    }
+
+    function terraformApply() {
+      document.getElementById("terminalOutput").textContent =
+`terraform apply
+Creating infrastructure resources...
+
+aws_vpc.main: Creation complete
+aws_instance.web_server: Creation complete
+aws_db_instance.database: Creation complete
+aws_s3_bucket.backups: Creation complete
+aws_iam_role.project_role: Creation complete
+
+Apply complete! Resources: 12 added, 0 changed, 0 destroyed.`;
+
+      document.getElementById("deploymentStatus").textContent = "Active";
+      document.getElementById("deploymentStatus").style.color = "#16a34a";
+
+      showNotification("Infrastructure successfully provisioned using Terraform.");
+    }
+
+    function addResource() {
+      const countElement = document.getElementById("resourceCount");
+      let resourceCount = Number(countElement.textContent);
+      resourceCount++;
+      countElement.textContent = resourceCount;
+
+      const instanceNumber = resourceCount - 10;
+
+      const row = `
+        <tr>
+          <td>aws_instance.web_server_${instanceNumber}</td>
+          <td>Amazon EC2</td>
+          <td>Auto-scaled application server</td>
+          <td class="status-online">Running</td>
+        </tr>
+      `;
+
+      document.getElementById("resourceTable").insertAdjacentHTML("beforeend", row);
+
+      document.getElementById("terminalOutput").textContent +=
+`\n\naws_instance.web_server_${instanceNumber}: Creating...
+aws_instance.web_server_${instanceNumber}: Creation complete!`;
+
+      showNotification("New EC2 instance resource added to the Terraform environment.");
+    }
+
+    function terraformDestroy() {
+      const confirmation = confirm("Do you want to simulate destroying the cloud environment?");
+
+      if (confirmation) {
+        document.getElementById("terminalOutput").textContent =
+`terraform destroy
+Destroying infrastructure resources...
+
+aws_instance.web_server: Destroyed
+aws_db_instance.database: Destroyed
+aws_s3_bucket.backups: Destroyed
+aws_vpc.main: Destroyed
+
+Destroy complete! Resources: 12 destroyed.`;
+
+        document.getElementById("deploymentStatus").textContent = "Destroyed";
+        document.getElementById("deploymentStatus").style.color = "#dc2626";
+        document.getElementById("environmentBadge").textContent = "● Environment Destroyed";
+        document.getElementById("environmentBadge").style.background = "#fee2e2";
+        document.getElementById("environmentBadge").style.color = "#991b1b";
+
+        showNotification("Cloud environment has been destroyed in this project simulation.", "error");
+      }
+    }
+  </script>
+
+</body>
+</html>
